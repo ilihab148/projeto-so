@@ -16,6 +16,7 @@ def pesquisa(ficheiro,palavra):
                 if palavra_pesquisa == palavra: 
                     counter_ocorrencias += 1
                     if counter_linhas not in linhas_out:    #para evitar que tenhamos duas linhas repetidas
+                        print(counter_linhas)
                         linhas_out.append(counter_linhas)
             counter_linhas +=1
     
@@ -30,11 +31,8 @@ def main(args):
     word = args[-2]
     lista_tuplos = [] #contem tuplos cuja pos 0 e o n_ocorrencias da palavra no ficheiro e pos 1 e uma lista de linhas em que aparece a palavra
     #ocorrencias_palavra = [ocorrencias_ficheiro1,ocorrencias_ficheiro2,etc]
-    #for ficheiro in ficheiros:
-    #   lista_tuplos.append(pesquisa (ficheiro,word))
-    #print (lista_tuplos)
-    lista_tuplos.append(pesquisa (ficheiros[0],word))
-    #lista_tuplos.append(pesquisa (ficheiros[1],word))
+    for ficheiro in ficheiros:
+       lista_tuplos.append(pesquisa (ficheiro,word))
     print (lista_tuplos)
 
 
@@ -45,3 +43,7 @@ if __name__ == "__main__":
 
    
 #DAR LOGO PRINT DAS LINHAS E N OCORRENCIAS EM PESQUISA PQ SE FIZER COM PROCESSOS ELE CORRE ME LOGO E NAO FACO MAIS LOOPS NO MAIN
+#Imprimir linhas
+#função que destribui trabalho entre processos de forma igual 
+#função que manda trabalhar os processos 
+#função que calcula todas as ocorrencias de todos os processos 
