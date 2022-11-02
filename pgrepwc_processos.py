@@ -7,6 +7,10 @@ import sys
 
 
 def pesquisa(ficheiro,palavra):
+    """Recebe: um ficheiro e uma palavra. 
+    Procura a palavra nesse ficheiro, imprime as linhas do ficheiro em que a palavra aparece.
+    Retorna dicionario com numero de oco
+        """
     with open (ficheiro,"r") as f:
         counter_ocorrencias = 0
         counter_linhas = 0
