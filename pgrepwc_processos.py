@@ -55,3 +55,4 @@ if __name__ == "__main__":
 #função que destribui trabalho entre processos de forma igual 
 #função que manda trabalhar os processos 
 #função que calcula todas as ocorrencias de todos os processos 
+#para teste:   ./pgrepwc  -p "documento" "teste.txt,teste2.txt"
