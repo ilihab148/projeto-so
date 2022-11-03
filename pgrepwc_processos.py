@@ -39,20 +39,36 @@ def main(args):
     if "-p" not in args:
         for ficheiro in ficheiros:
             lista_dicts.append(pesquisa (ficheiro,word))
+        ocorrencias_total = 0
+        linhas_total = 0
+        for i in range(len(lista_dicts)):
+            ocorrencias_total = ocorrencias_total + lista_dicts[i]["n_ocorrencias"]
+            linhas_total = linhas_total + lista_dicts[i]["n_linhas"]
+        
+        #check se -c (n total de ocorrencias) e -l (n total de linhas) estao presentes e da print se sim
+        if "-c" in args:
+            print (f'ocorrências da palavra: {ocorrencias_total}')
+        if "-l" in args:
+            print (f'número de linhas em que a palavra aparece: {linhas_total}')
+        
     if "-p" in args:
+        lista_processos = []
         for i in range(len(ficheiros)): #criamos processos. para cada ficheiro criamos um processo
-            process = multiprocessing.Process(target = pesquisa, args = (ficheiros[i],word) )
-            print (process)
-
-
+            processo = multiprocessing.Process(target = pesquisa, args = (ficheiros[i],word) )
+            processo.start()
+        for processo in lista_processos:
+            processo.join() #se colocassemos o join no loop acima, ele so continuava a correr o loop quando o processo corrente acabasse
 
 if __name__ == "__main__":
     main(sys.argv[1:])
 
-   
-#DAR LOGO PRINT DAS LINHAS E N OCORRENCIAS EM PESQUISA PQ SE FIZER COM PROCESSOS ELE CORRE ME LOGO E NAO FACO MAIS LOOPS NO MAIN
-#Imprimir linhas
-#função que destribui trabalho entre processos de forma igual 
+    
+
+#função que distribui trabalho entre processos de forma igual 
 #função que manda trabalhar os processos 
 #função que calcula todas as ocorrencias de todos os processos 
-#para teste:   ./pgrepwc  -p "documento" "teste.txt,teste2.txt"
+#para testar: 
+#uma solucao para os processos pode ser uma versao do pesquisa mas em vez de retornar o dicionarios, escreve tudo num dicionario global cujos dados podem ser usados mais tarde.isto porque os processos nao retornam nada
+#criamos um dicionario global e vamos guardando as nossas variaveis e listas e quando a funcao correr outra vez comeca as vars locais do zero
+#possible solution: https://stackoverflow.com/questions/10415028/how-can-i-recover-the-return-value-of-a-function-passed-to-multiprocessing-proce
+#ver codigo da catarina para check se ha um numero nos args
