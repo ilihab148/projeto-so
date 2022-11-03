@@ -51,13 +51,20 @@ def main(args):
         if "-l" in args:
             print (f'número de linhas em que a palavra aparece: {linhas_total}')
         
-    if "-p" in args:
-        lista_processos = []
-        for i in range(len(ficheiros)): #criamos processos. para cada ficheiro criamos um processo
-            processo = multiprocessing.Process(target = pesquisa, args = (ficheiros[i],word) )
-            processo.start()
-        for processo in lista_processos:
-            processo.join() #se colocassemos o join no loop acima, ele so continuava a correr o loop quando o processo corrente acabasse
+    elif "-p" in args:
+        numeros=[x for x in args if type(x)==int] #faz uma lista com os numeros dados no argumenti
+        nProcessos=numeros[0]   #Assim é possivel descobrir o numero associado ao -p
+        if nProcessos>len(ficheiros) or nProcessos==len(ficheiros):
+            for i in range(len(ficheiros)): #criamos processos. para cada ficheiro criamos um processo
+                processo = multiprocessing.Process(target = pesquisa, args = (ficheiros[i],word) )
+                processo.start()
+                
+             
+             
+        elif nProcessos<len(ficheiros):
+    
+        
+        
 
 if __name__ == "__main__":
     main(sys.argv[1:])
@@ -72,3 +79,10 @@ if __name__ == "__main__":
 #criamos um dicionario global e vamos guardando as nossas variaveis e listas e quando a funcao correr outra vez comeca as vars locais do zero
 #possible solution: https://stackoverflow.com/questions/10415028/how-can-i-recover-the-return-value-of-a-function-passed-to-multiprocessing-proce
 #ver codigo da catarina para check se ha um numero nos args
+ 
+        #lista_processos = []
+        #for i in range(len(ficheiros)): #criamos processos. para cada ficheiro criamos um processo
+           # processo = multiprocessing.Process(target = pesquisa, args = (ficheiros[i],word) )
+            #processo.start()
+        #for processo in lista_processos:
+            #processo.join() #se colocassemos o join no loop acima, ele so continuava a correr o loop quando o processo corrente acabasse
