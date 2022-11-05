@@ -4,7 +4,6 @@
 ### Aluno 3: Iliyan Habibo (fc58626)
 
 
-from http.client import CannotSendRequest
 import multiprocessing 
 import sys
 
