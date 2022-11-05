@@ -14,10 +14,8 @@ for i in range(len(sys.argv[1:])):
         ficheiros = (sys.argv[1:]) [i+1:]
         break #tenho que dar o break senao ele continua o for e vai atualizando o word e os ficheiros para a string que aparece a seguir
 
-#ficheiros = (sys.argv[1:])[-1].split(",")  
-#word = (sys.argv[1:])[-2]
-shared_array_nocorrencias = multiprocessing.Array("i",len(ficheiros)) #lista c ocorrencias da palavra. 
-#indice 0 = ocorrencias da palavra no ficheiro na posicao 0 (em ficheiros)
+shared_array_nocorrencias = multiprocessing.Array("i",len(ficheiros)) #lista c ocorrencias da palavra.
+#continuacao da linha acima: indice 0 = ocorrencias da palavra no ficheiro na posicao 0 (em ficheiros)
 shared_array_nlinhas = multiprocessing.Array("i",len(ficheiros)) #lista c n_linhas em que a palavra aparece no ficheiro
 
 def pesquisa(indice_ficheiro,ficheiro,palavra,queue):
@@ -35,7 +33,6 @@ def pesquisa(indice_ficheiro,ficheiro,palavra,queue):
             counter_linhas +=1
     shared_array_nocorrencias[indice_ficheiro] = counter_ocorrencias
     shared_array_nlinhas[indice_ficheiro] = len(lista_linhas)
-    
 
 
 def main(args):
@@ -50,22 +47,14 @@ def main(args):
             #imprime linhas que estao na queue ate a queue estar vazia
             while q.empty() == False:
                 print (q.get())
-
-        ocorrencias_total = 0
-        linhas_total = 0
-        for i in range(len(ficheiros)): 
-            ocorrencias_total = ocorrencias_total + shared_array_nocorrencias[i]
-            linhas_total = linhas_total + shared_array_nlinhas[i]
-        
-        #check se -c (n total de ocorrencias) e -l (n total de linhas) estao presentes e da print se sim
-        if "-c" in args:
-            print (f'ocorrências da palavra: {ocorrencias_total}')
-        if "-l" in args:
-            print (f'número de linhas em que a palavra aparece: {linhas_total}')
             
 
     elif "-p" in args:
         nProcessos=int(args[int(args.index("-p")) + 1]) #sabemos que o num processos vem a seguir ao -p (na lista args), entao vamos busca-lo usando args[indice a seguir a -p]
+        #aqui porque ja tenho um numero e o argumento antes da palavra nao leva um "-" tenho que mudar os indices das pos da word e ficheiros
+        word = args[args.index(str(nProcessos)) + 1]
+        ficheiros = args[args.index(word) +1 :]
+        """
         if nProcessos>len(ficheiros) or nProcessos==len(ficheiros):
             lista_processos = []
             lista_queues = []
@@ -73,17 +62,32 @@ def main(args):
                 q = multiprocessing.Queue()
                 processo = multiprocessing.Process(target = pesquisa, args = (i,ficheiros[i],word,q) )
                 processo.start()
-                lista_queues[i] = q
+                lista_queues.append(q)
             for processo in lista_processos:
                 processo.join()
-            """for queue in lista_queues:
-            dar print no nome do ficheiro e nas linhas"""
+            for i in range(len(lista_queues)):
+                print (f'NOME DO FICHEIRO: {ficheiros[i]}')
+            #imprime linhas que estao na queue ate a queue estar vazia
+                while lista_queues[i].empty() == False:
+                    print (q.get())"""
+
+    
+    ocorrencias_total = 0
+    linhas_total = 0
+    for i in range(len(ficheiros)): 
+        ocorrencias_total = ocorrencias_total + shared_array_nocorrencias[i]
+        linhas_total = linhas_total + shared_array_nlinhas[i]
+        
+    #check se -c (n total de ocorrencias) e -l (n total de linhas) estao presentes e da print se sim
+    if "-c" in args:
+        print (f'ocorrências da palavra: {ocorrencias_total}')
+    if "-l" in args:
+        print (f'número de linhas em que a palavra aparece: {linhas_total}')
 
         #elif nProcessos<len(ficheiros):
-    
+        #distribute the files thru processes. create sublists. 1st process runs 1st sublist
         
         
 
 if __name__ == "__main__":
     main(sys.argv[1:])
-        
