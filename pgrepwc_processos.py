@@ -3,15 +3,25 @@
 ### Aluno 2: Eduardo Viana (fc58776)
 ### Aluno 3: Iliyan Habibo (fc58626)
 
+
+from http.client import CannotSendRequest
 import multiprocessing 
 import sys
 
+#tenho que declarar word e ficheiros aqui p poder usar nos shared arrays
+for i in range(len(sys.argv[1:])):
+    if sys.argv[1:][i][0] != "-":
+        word = (sys.argv[1:]) [i]
+        ficheiros = (sys.argv[1:]) [i+1:]
+        break #tenho que dar o break senao ele continua o for e vai atualizando o word e os ficheiros para a string que aparece a seguir
 
-def pesquisa(ficheiro,palavra):
-    """Recebe: um ficheiro e uma palavra. 
-    Procura a palavra nesse ficheiro, imprime as linhas do ficheiro em que a palavra aparece.
-    Returns: dicionario com numero de ocorrencias da palavra no ficheiro e o numero de linhas que contem a palavra
-    """
+#ficheiros = (sys.argv[1:])[-1].split(",")  
+#word = (sys.argv[1:])[-2]
+shared_array_nocorrencias = multiprocessing.Array("i",len(ficheiros)) #lista c ocorrencias da palavra. 
+#indice 0 = ocorrencias da palavra no ficheiro na posicao 0 (em ficheiros)
+shared_array_nlinhas = multiprocessing.Array("i",len(ficheiros)) #lista c n_linhas em que a palavra aparece no ficheiro
+
+def pesquisa(indice_ficheiro,ficheiro,palavra,queue):
     with open (ficheiro,"r") as f:
         counter_ocorrencias = 0
         counter_linhas = 0
@@ -21,62 +31,60 @@ def pesquisa(ficheiro,palavra):
                 if palavra_pesquisa == palavra: 
                     counter_ocorrencias += 1
                     if counter_linhas not in lista_linhas:    #para evitar que tenhamos duas linhas repetidas
-                        print (linha) #print das linhas em que a palavra aparece
                         lista_linhas.append(counter_linhas)
+                        queue.put(linha)
             counter_linhas +=1
+    shared_array_nocorrencias[indice_ficheiro] = counter_ocorrencias
+    shared_array_nlinhas[indice_ficheiro] = len(lista_linhas)
     
-    return {
-        "n_ocorrencias" : counter_ocorrencias,
-        "n_linhas" : len(lista_linhas),
-    }
+
 
 def main(args):
     print('Programa: pgrepwc_processos.py')
     print('Argumentos: ', args)
-    ficheiros = args[-1].split(",")
-    word = args[-2]
-    lista_dicts = [] #lista que contem dicionarios com numero de ocorrencias da palavra num certo ficheiro e numero de linhas em que a palavra ocorre
     if "-p" not in args:
-        for ficheiro in ficheiros:
-            lista_dicts.append(pesquisa (ficheiro,word))
+        for i in range(len(ficheiros)):
+            q = multiprocessing.Queue()
+            pesquisa (i,ficheiros[i],word,q)
+            #print do nome do ficheiro
+            print (f'NOME DO FICHEIRO: {ficheiros[i]}')
+            #imprime linhas que estao na queue ate a queue estar vazia
+            while q.empty() == False:
+                print (q.get())
+
         ocorrencias_total = 0
         linhas_total = 0
-        for i in range(len(lista_dicts)):
-            ocorrencias_total = ocorrencias_total + lista_dicts[i]["n_ocorrencias"]
-            linhas_total = linhas_total + lista_dicts[i]["n_linhas"]
+        for i in range(len(ficheiros)): 
+            ocorrencias_total = ocorrencias_total + shared_array_nocorrencias[i]
+            linhas_total = linhas_total + shared_array_nlinhas[i]
         
         #check se -c (n total de ocorrencias) e -l (n total de linhas) estao presentes e da print se sim
         if "-c" in args:
             print (f'ocorrências da palavra: {ocorrencias_total}')
         if "-l" in args:
             print (f'número de linhas em que a palavra aparece: {linhas_total}')
-        
+            
+
     elif "-p" in args:
         nProcessos=int(args[int(args.index("-p")) + 1]) #sabemos que o num processos vem a seguir ao -p (na lista args), entao vamos busca-lo usando args[indice a seguir a -p]
         if nProcessos>len(ficheiros) or nProcessos==len(ficheiros):
             lista_processos = []
+            lista_queues = []
             for i in range(len(ficheiros)): #criamos processos. para cada ficheiro criamos um processo
-                processo = multiprocessing.Process(target = pesquisa, args = (ficheiros[i],word) )
+                q = multiprocessing.Queue()
+                processo = multiprocessing.Process(target = pesquisa, args = (i,ficheiros[i],word,q) )
                 processo.start()
+                lista_queues[i] = q
             for processo in lista_processos:
                 processo.join()
-                             
-        #elif nProcessos<len(ficheiros):"""
+            """for queue in lista_queues:
+            dar print no nome do ficheiro e nas linhas"""
+
+        #elif nProcessos<len(ficheiros):
     
         
         
 
 if __name__ == "__main__":
     main(sys.argv[1:])
-
-    
-
-#função que distribui trabalho entre processos de forma igual 
-#função que manda trabalhar os processos 
-#função que calcula todas as ocorrencias de todos os processos 
-#para testar: 
-#uma solucao para os processos pode ser uma versao do pesquisa mas em vez de retornar o dicionarios, escreve tudo num dicionario global cujos dados podem ser usados mais tarde.isto porque os processos nao retornam nada
-#criamos um dicionario global e vamos guardando as nossas variaveis e listas e quando a funcao correr outra vez comeca as vars locais do zero
-#possible solution: https://stackoverflow.com/questions/10415028/how-can-i-recover-the-return-value-of-a-function-passed-to-multiprocessing-proce
-
         
