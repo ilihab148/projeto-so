@@ -5,7 +5,6 @@
 
 
 import multiprocessing
-from operator import mul 
 import sys
 
 #tenho que declarar word e ficheiros aqui p poder usar nos shared arrays
