@@ -72,10 +72,10 @@ def main(args):
     if "-c" in args and "-l" not in args:
         print("Número total de ocorrências: ", totalOcorrencias)
     elif "-c" not in args and "-l" in args:
-        print("Número de linhas em que houve uma ou mais ocorrêcias: ", totalLinhas)
+        print("Número de linhas em que houve uma ou mais ocorrências: ", totalLinhas)
     elif "-c" in args and "-l" in args:
         print("Número total de ocorrências: ", totalOcorrencias)
-        print("Número de linhas em que houve uma ou mais ocorrêcia: ", totalLinhas)
+        print("Número de linhas em que houve uma ou mais ocorrênciaa: ", totalLinhas)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
