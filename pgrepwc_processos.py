@@ -24,21 +24,23 @@ for i in range(len(sys.argv[1:])):
 shared_array_nocorrencias = multiprocessing.Array("i",len(ficheiros)) #lista c ocorrencias da palavra.
 #continuacao da linha acima: indice 0 = ocorrencias da palavra no ficheiro na posicao 0 (em ficheiros)
 shared_array_nlinhas = multiprocessing.Array("i",len(ficheiros)) #lista c n_linhas em que a palavra aparece no ficheiro
-def pesquisa(indice_ficheiro,ficheiro,palavra,queue,array_ocorrencias,array_linhas): #tenho q por os arrays aqui pq os filhos n conseguem ler os arrays criados acima
-    with open (ficheiro,"r") as f:
-        counter_ocorrencias = 0
-        counter_linhas = 0
-        lista_linhas = [] #indices das linhas em que aparece a palavra
-        for linha in f: #le linhas do ficheiro
-            for palavra_pesquisa in linha.split(): #le cada palavra da linha corrente
-                if palavra_pesquisa == palavra: 
-                    counter_ocorrencias += 1
-                    if counter_linhas not in lista_linhas:    #para evitar que tenhamos duas linhas repetidas
-                        lista_linhas.append(counter_linhas)
-                        queue.put(linha)
-            counter_linhas +=1
-    array_ocorrencias[indice_ficheiro] = counter_ocorrencias
-    array_linhas[indice_ficheiro] = len(lista_linhas)
+
+def pesquisa(lista_indice_ficheiros,lista_ficheiros,palavra,lista_queues,array_ocorrencias,array_linhas): #tenho q por os arrays aqui pq os filhos n conseguem ler os arrays criados acima
+    for i in range(len(lista_ficheiros)):
+        with open (lista_ficheiros[i],"r") as f:
+            counter_ocorrencias = 0
+            counter_linhas = 0
+            lista_linhas = [] #indices das linhas em que aparece a palavra
+            for linha in f: #le linhas do ficheiro
+                for palavra_pesquisa in linha.split(): #le cada palavra da linha corrente
+                    if palavra_pesquisa == palavra: 
+                        counter_ocorrencias += 1
+                        if counter_linhas not in lista_linhas:    #para evitar que tenhamos duas linhas repetidas
+                            lista_linhas.append(counter_linhas)
+                            lista_queues[i].put(linha)
+                counter_linhas +=1
+        array_ocorrencias[lista_indice_ficheiros[i]] = counter_ocorrencias
+        array_linhas[lista_indice_ficheiros[i]] = len(lista_linhas)
 
 
 def main(args):
@@ -47,9 +49,9 @@ def main(args):
     if "-p" not in args:
         for i in range(len(ficheiros)):
             q = multiprocessing.Queue()
-            pesquisa (i,ficheiros[i],word,q,shared_array_nocorrencias,shared_array_nlinhas)
+            pesquisa ([i],[ficheiros[i]],word,[q],shared_array_nocorrencias,shared_array_nlinhas)
             #print do nome do ficheiro
-            print (f'NOME DO FICHEIRO: {ficheiros[i]}')
+            print (f'\nNOME DO FICHEIRO: {ficheiros[i]}\n')
             #imprime linhas que estao na queue ate a queue estar vazia
             while q.empty() == False:
                 print (q.get())
@@ -63,29 +65,49 @@ def main(args):
             for i in range(len(ficheiros)): #criamos processos. para cada ficheiro criamos um processo
                 q = multiprocessing.Queue()
                 lista_queues.append(q)
-                processo = multiprocessing.Process(target = pesquisa, args = (i,ficheiros[i],word,lista_queues[i],shared_array_nocorrencias,shared_array_nlinhas) )
+                processo = multiprocessing.Process(target = pesquisa, args = ([i],[ficheiros[i]],word,[lista_queues[i]],shared_array_nocorrencias,shared_array_nlinhas) )
                 processo.start()
                 lista_processos.append(processo)  
             for processo in lista_processos:
                 processo.join()
 
             for i in range(len(lista_queues)):
-                print (f'NOME DO FICHEIRO: {ficheiros[i]}')
+                print (f'\nNOME DO FICHEIRO: {ficheiros[i]}\n')
                 #imprime linhas que estao na queue ate a queue estar vazia
                 while lista_queues[i].empty() == False:
                     print (lista_queues[i].get())
     
         elif nProcessos<len(ficheiros):
-            #distribute the files thru processes. create sublists. 1st process runs 1st sublist
-            for i in nProcessos:
+            ficheiros_sublistas = [ficheiros[i:i + nProcessos] for i in range(0, len(ficheiros), nProcessos)]
+            lista_indices = [i for i in range(len(ficheiros))]
+            sublistas_indices = [lista_indices[i:i+nProcessos] for i in range(0,len(ficheiros),nProcessos)]
+            lista_queues = []
+            lista_processos = []
+            for i in range(len(ficheiros)):
+                q = multiprocessing.Queue()
+                lista_queues.append(q)
+            sublistas_queues =[lista_queues[i:i+nProcessos] for i in range(0,len(ficheiros), nProcessos)]
+            for i in range(len(ficheiros_sublistas)):
+                processo = multiprocessing.Process(target = pesquisa, args = (sublistas_indices[i],ficheiros_sublistas[i],word,sublistas_queues[i],shared_array_nocorrencias,shared_array_nlinhas))
+                processo.start()
+                lista_processos.append(processo)
+            for processo in lista_processos:
+                processo.join()
+            lista_queues = []
+            for sublista in sublistas_queues:
+                for queue in sublista:
+                    lista_queues.append(queue)
+            for i in range(len(lista_queues)):
+                print (f'\nNOME DO FICHEIRO: {ficheiros[i]}\n')
+                #imprime linhas que estao na queue ate a queue estar vazia
+                while lista_queues[i].empty() == False:
+                    print (lista_queues[i].get())
 
     ocorrencias_total = 0
     linhas_total = 0
     for i in range(len(ficheiros)): 
         ocorrencias_total = ocorrencias_total + shared_array_nocorrencias[i]
         linhas_total = linhas_total + shared_array_nlinhas[i]
-        
-
     #check se -c (n total de ocorrencias) e -l (n total de linhas) estao presentes e da print se sim
     if "-c" in args:
         print (f'\nNúmero total de ocorrências: {ocorrencias_total}')
